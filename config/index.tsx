@@ -1,6 +1,7 @@
 import { cookieStorage, createStorage, http } from "@wagmi/core";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { mainnet, arbitrum } from "@reown/appkit/networks";
+import { zkSyncSepoliaTestnet } from "@/config/customNetwork";
 
 export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
 
@@ -8,7 +9,7 @@ if (!projectId) {
   throw new Error("NEXT_PUBLIC_PROJECT_ID is not defined");
 }
 
-export const networks = [mainnet, arbitrum];
+export const networks = [zkSyncSepoliaTestnet];
 
 //Set up the Wagmi Adapter (Config)
 
@@ -21,4 +22,4 @@ export const wagmiAdapter = new WagmiAdapter({
   networks,
 });
 
-export const config = wagmiAdapter.wagmiConfig
+export const config = wagmiAdapter.wagmiConfig;

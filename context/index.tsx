@@ -1,51 +1,144 @@
 "use client";
 
-import React, { type ReactNode } from "react";
+import { VOTING_V1_ABI } from "@/constant/abi";
+import { ReadContractData } from "@/constant/dummyDats";
+import { Proposal, VoteChainContextType } from "@/interface/interface";
+import { useAppKit } from "@reown/appkit/react";
+import React, { createContext, useEffect, useMemo, useState } from "react";
+import { writeContractSync } from "viem/actions";
+import { useConnection, useReadContracts } from "wagmi";
 
-import { projectId, wagmiAdapter } from "@/config";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createAppKit, CreateAppKit } from "@reown/appkit/react";
-import { mainnet } from "@reown/appkit/networks";
-import { WagmiProvider, cookieToInitialState, type Config } from "wagmi";
+const VoteChainContext = createContext<VoteChainContextType | undefined>(
+  undefined
+);
 
-// set up react-query client
-const queryClient = new QueryClient();
+const VoteChainProvider = ({ children }: { children: React.ReactNode }) => {
+  const { address, isConnecting, chain, chainId } = useConnection();
+  const { open: connectWallet } = useAppKit();
+  const [memberAddresses, setMemberAddresses] = useState<string[]>([]);
 
-if (!projectId) {
-  throw new Error("ProjectId is not defined");
-}
+  const { data, isLoading } = useReadContracts({
+    contracts: ReadContractData(memberAddresses),
+  });
 
-// Create the modal
 
-const modal = createAppKit({
-  adapters: [wagmiAdapter],
-  projectId,
-  networks: [mainnet],
-  defaultNetwork: mainnet,
-  features: {
-    analytics: true,
-  },
-});
+  const userRole = useMemo((): "guest" | "owner" | "member" => {
+    if (!data || !address) return "guest";
 
-function ContextProvider({
-  children,
-  cookies,
-}: {
-  children: ReactNode;
-  cookies?: string | null;
-}) {
-  const initialState = cookieToInitialState(
-    wagmiAdapter.wagmiConfig as Config,
-    cookies
-  );
+    const owner = data[0].result as `0x${string}`;
+    const isMember = data[1]?.result;
+
+    if (address.toLowerCase() === owner.toLowerCase()) {
+      return "owner";
+    }
+
+    if (isMember) {
+      return "member";
+    }
+
+    return "guest";
+  }, [data, address]);
+
+  const getAllProposal = useMemo(() => {
+    const rawProposals = data ? (data[3]?.result as Proposal[]) || [] : [];
+
+    if (rawProposals.length === 0) {
+      return {
+        proposals: [],
+        stats: {
+          totalYes: 0,
+          totalNo: 0,
+          totalVotes: 0,
+          proposalCount: 0,
+        },
+      };
+    }
+
+    // Calculate totals using reduce
+    const { totalYes, totalNo, proposals } = rawProposals.reduce(
+      (acc, curr, index) => {
+        const yesVotes = Number(curr.yesCount);
+        const noVotes = Number(curr.noCount);
+
+        return {
+          totalYes: acc.totalYes + yesVotes,
+          totalNo: acc.totalNo + noVotes,
+          proposals: [
+            ...acc.proposals,
+            {
+              id: index,
+              description: curr.description,
+              yesVotes,
+              noVotes,
+              executed: curr.executed,
+              totalVotes: yesVotes + noVotes,
+            },
+          ],
+        };
+      },
+      { totalYes: 0, totalNo: 0, proposals: [] as any[] }
+    );
+
+    const totalVotes = totalYes + totalNo;
+
+    return {
+      proposals,
+      stats: {
+        totalYes,
+        totalNo,
+        totalVotes,
+        proposalCount: proposals.length,
+
+        yesPercentage: totalVotes > 0 ? (totalYes / totalVotes) * 100 : 0,
+        noPercentage: totalVotes > 0 ? (totalNo / totalVotes) * 100 : 0,
+      },
+    };
+  }, [data]);
+
+  const getMembersCount = useMemo(() => {
+    const count = data ? (data[4]?.result as bigint) || BigInt(0) : BigInt(0);
+    return Number(count);
+  }, [data]);
+
+  const value = useMemo(() => {
+    return {
+      address,
+      isConnecting,
+      chain: chain?.name,
+      chainId,
+      connectWallet,
+      setMemberAddresses,
+      userRole,
+      getAllProposal,
+      getMembersCount,
+      isLoading,
+    };
+  }, [
+    isLoading,
+    address,
+    isConnecting,
+    chain,
+    chainId,
+    connectWallet,
+    setMemberAddresses,
+    userRole,
+    getAllProposal,
+    getMembersCount,
+  ]);
+
   return (
-    <WagmiProvider
-      initialState={initialState}
-      config={wagmiAdapter.wagmiConfig as Config}
-    >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </WagmiProvider>
+    <VoteChainContext.Provider value={value}>
+      {children}
+    </VoteChainContext.Provider>
   );
-}
+};
+export default VoteChainProvider;
 
-export default ContextProvider;
+export const useVoteChain = () => {
+  const context = React.useContext(VoteChainContext);
+
+  if (context === undefined) {
+    throw new Error("useVoteChain must be used within a VoteChainProvider");
+  }
+  return context;
+};
