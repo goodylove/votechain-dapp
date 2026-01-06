@@ -8,40 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { UserPlus, Users, CheckCircle } from "lucide-react";
 import { useVoteChain } from "@/context";
+import { useWriteToContractHook } from "@/hooks/useWrite";
 
-interface MemberManagementProps {
-  members: string[];
-  onAddMember: (address: string) => void;
-}
-
-export function MemberManagement({
-  members,
-  onAddMember,
-}: MemberManagementProps) {
-  const [newMemberAddress, setNewMemberAddress] = useState("");
+export function MemberManagement() {
+  const [newMemberAddress, setNewMemberAddress] = useState<`0x${string}`>();
   const [isAdding, setIsAdding] = useState(false);
-
   const { isConnecting } = useVoteChain();
+  const { handleAddMember, isLoading } = useWriteToContractHook();
 
-  const handleAddMember = async () => {
+  const handleAddMemberFunc = async () => {
     if (!newMemberAddress || !newMemberAddress.startsWith("0x")) {
       toast.error("Please enter a valid zksync address");
       return;
     }
 
-    if (members.includes(newMemberAddress)) {
-      toast.error("Member already exists");
-      return;
-    }
-
-    setIsAdding(true);
-    // Simulate transaction
-    setTimeout(() => {
-      onAddMember(newMemberAddress);
-      setNewMemberAddress("");
-      setIsAdding(false);
-      toast.success("Member added successfully!");
-    }, 1500);
+    await handleAddMember(newMemberAddress as `0x${string}`);
   };
 
   return (
@@ -73,14 +54,16 @@ export function MemberManagement({
               type="text"
               placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
               value={newMemberAddress}
-              onChange={(e) => setNewMemberAddress(e.target.value)}
+              onChange={(e) =>
+                setNewMemberAddress(e.target.value as `0x${string}`)
+              }
               className="flex-1 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500 font-mono"
               disabled={isAdding}
             />
             <Button
-              onClick={handleAddMember}
+              onClick={handleAddMemberFunc}
               disabled={isAdding}
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white cursor-pointer flex items-center"
             >
               <UserPlus className="w-4 h-4 mr-2" />
               {isAdding ? "Adding..." : "Add Member"}

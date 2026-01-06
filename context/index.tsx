@@ -22,21 +22,21 @@ const VoteChainProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
 
-  const userRole = useMemo((): "guest" | "owner" | "member" => {
-    if (!data || !address) return "guest";
+  const userRole = useMemo((): "Guest" | "Owner" | "Member" => {
+    if (!data || !address) return "Guest";
 
     const owner = data[0].result as `0x${string}`;
     const isMember = data[1]?.result;
 
     if (address.toLowerCase() === owner.toLowerCase()) {
-      return "owner";
+      return "Owner";
     }
 
     if (isMember) {
-      return "member";
+      return "Member";
     }
 
-    return "guest";
+    return "Guest";
   }, [data, address]);
 
   const getAllProposal = useMemo(() => {

@@ -53,11 +53,6 @@ export default function VotingDAOApp() {
     toast.success("Wallet Disconnected Successfully!");
   };
 
-  const handleAddMember = (address: string) => {
-    setMembers([...members, address]);
-    setTotalMembers(totalMembers + 1);
-  };
-
   const handleCreateProposal = (description: string) => {
     const newProposal: Proposal = {
       id: proposals.length + 1,
@@ -103,7 +98,6 @@ export default function VotingDAOApp() {
   }
   return (
     <div className="min-h-screen bg-black ">
-      
       <header className="sticky top-0 z-50  ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
           <div className="flex items-center justify-between flex-wrap gap-4 bg-black py-4">
@@ -139,7 +133,6 @@ export default function VotingDAOApp() {
           />
         ) : (
           <>
-           
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatsCard
                 title="Total Proposals"
@@ -172,12 +165,7 @@ export default function VotingDAOApp() {
             </div>
 
             {/* Owner Panel */}
-            {userRole === "owner" && (
-              <MemberManagement
-                members={members}
-                onAddMember={handleAddMember}
-              />
-            )}
+            {userRole === "owner" && <MemberManagement />}
 
             {/* Create Proposal Section */}
             {(userRole === "owner" || userRole === "member") && (

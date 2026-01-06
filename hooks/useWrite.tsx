@@ -1,4 +1,3 @@
-// /src/hooks/useVoting.ts
 import { useState, useCallback, useEffect } from "react";
 import { useConnection } from "wagmi";
 import { addMember, createProposal, vote } from "@/lib/writeContract";
@@ -9,7 +8,7 @@ import { VOTING_V1_ABI } from "@/constant/abi";
 const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
   "") as `0x${string}`;
 
-export const useVoting = () => {
+export const useWriteToContractHook = () => {
   const { address } = useConnection();
   const [transactionHash, setTransactionHash] = useState<
     `0x${string}` | undefined
@@ -53,6 +52,19 @@ export const useVoting = () => {
     },
   });
 
+  useWatchContractEvent({
+    address: CONTRACT_ADDRESS,
+    abi: VOTING_V1_ABI,
+    eventName: "MemberAdded",
+    onLogs: (logs) => {
+      logs.forEach((log) => {
+        const { member } = log.args;
+        toast.info("New member added!", {
+          description: `Address: ${member}`,
+        });
+      });
+    },
+  });
   // Write functions with event integration
   const handleVote = useCallback(
     async (proposalId: bigint, voteChoice: boolean) => {
@@ -163,7 +175,7 @@ export const useVoting = () => {
             ),
         },
       });
-      setTransactionHash(null);
+      setTransactionHash(undefined);
     }
   }, [isConfirmed, transactionHash]);
 
