@@ -38,13 +38,13 @@ export const useWriteToContractHook = () => {
               support ? "YES" : "NO"
             } on proposal ${proposalId}`,
           });
-          refetchData?.();
-          if (currentToastId) {
-            toast.dismiss(currentToastId);
-            setCurrentToastId(null);
-          }
         }
       });
+      refetchData?.();
+      if (currentToastId) {
+        toast.dismiss(currentToastId);
+        setCurrentToastId(null);
+      }
     },
   });
 
