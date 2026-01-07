@@ -1,180 +1,160 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { ThumbsUp, ThumbsDown, Clock } from "lucide-react";
+import { ThumbsUp, ThumbsDown, CheckCircle2, Timer } from "lucide-react";
 import { useWriteToContractHook } from "@/hooks/useWrite";
 import { useVoteChain } from "@/context";
 
-interface Proposal {
-  id: number;
-  description: string;
-  yesVotes: number;
-  noVotes: number;
-  executed: boolean;
-  timestamp: string;
-}
-
 interface ProposalCardProps {
   canVote: boolean;
-  onVote: (proposalId: number, voteYes: boolean) => void;
 }
 
-export function ProposalCard({ canVote, onVote }: ProposalCardProps) {
-  const [isVoting, setIsVoting] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
-  const { handleCreateProposal, isLoading, isConfirmed } =
-    useWriteToContractHook();
+export function ProposalCard({ canVote }: ProposalCardProps) {
+  const { isLoading, isConfirmed, handleVote } = useWriteToContractHook();
   const { getAllProposal } = useVoteChain();
 
-  // derive proposal from getAllProposal
-  const proposal = useMemo(() => {
-    return getAllProposal.proposals?.map((val) => val);
+  const proposals = useMemo(() => {
+    return getAllProposal.proposals?.map((val) => val) || [];
   }, [getAllProposal]);
 
-  const handleVote = async (voteYes: boolean) => {
-    // if (hasVoted || executed) return;
-    // setIsVoting(true);
-    // // Simulate transaction
-    // setTimeout(() => {
-    //   onVote(id, voteYes);
-    //   setHasVoted(true);
-    //   setIsVoting(false);
-    //   toast.success("Vote submitted successfully!");
-    // }, 1500);
+  const handleVoteFunc = async (id: bigint, votesChoice: boolean) => {
+    try {
+      await handleVote(id, votesChoice);
+    } catch (error) {
+      console.error("Error voting on proposal:", error);
+    }
   };
 
   return (
-    <>
-      {proposal?.length > 0 ? (
-        proposal.map((proposal, index) => {
+    <div className="grid gap-6">
+      {proposals.length > 0 ? (
+        proposals.map((proposal, index) => {
+          const totalVotes =
+            Number(proposal.yesVotes) + Number(proposal.noVotes);
+
           const yesPercentage =
-            proposal.totalVotes > 0
-              ? (proposal.yesVotes / proposal.totalVotes) * 100
-              : 0;
+            totalVotes > 0 ? (Number(proposal.yesVotes) / totalVotes) * 100 : 0;
           const noPercentage =
-            proposal.totalVotes > 0
-              ? (proposal.noVotes / proposal.totalVotes) * 100
-              : 0;
+            totalVotes > 0 ? (Number(proposal.noVotes) / totalVotes) * 100 : 0;
 
           return (
             <Card
               key={index}
-              className="p-6 bg-black border font-inter border-slate-700 transition-all hover:shadow-lg hover:shadow-purple-500/10 backdrop-blur-sm"
+              className="p-6 bg-white border border-gray-300 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300"
             >
-              <div className="space-y-4">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-bold text-white">
-                      Proposal #{index + 1}
-                    </h3>
-                    <Badge
-                      className={
-                        proposal.executed
-                          ? "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                          : "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                      }
-                      variant="outline"
-                    >
-                      {proposal.executed ? "Executed" : "Active"}
-                    </Badge>
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-purple-600 bg-purple-50 px-3 py-1 rounded-full border border-purple-100">
+                        Proposal #{index + 1}
+                      </span>
+                      {proposal.executed ? (
+                        <Badge
+                          variant="secondary"
+                          className="bg-gray-100 text-gray-500 hover:bg-gray-200 gap-1"
+                        >
+                          <CheckCircle2 className="w-3 h-3" /> Executed
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-100 gap-1 shadow-none font-medium">
+                          <Timer className="w-3 h-3" /> Active
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  {/* <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Clock className="w-4 h-4" />
-            {proposal.timestamp}
-          </div> */}
                 </div>
 
                 {/* Description */}
-                <p className="text-gray-300 text-base leading-relaxed">
-                  {proposal.description}
-                </p>
+                <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                  <p className="text-gray-600 text-base leading-relaxed">
+                    {proposal.description}
+                  </p>
+                </div>
 
-                {/* Vote Bars */}
-                <div className="space-y-3">
-                  <div className="space-y-1">
+                <div className="space-y-5">
+                  {/* Yes Bar */}
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-400 font-medium flex items-center gap-2">
-                        <ThumbsUp className="w-4 h-4" />
-                        Yes
+                      <span className="text-gray-700 font-medium flex items-center gap-2">
+                        <ThumbsUp className="w-4 h-4 text-green-500" />
+                        Approve
                       </span>
-                      <span className="text-green-400 font-mono">
-                        {yesPercentage.toFixed(0)}% ({proposal.yesVotes} votes)
+                      <span className="text-gray-900 font-bold">
+                        {yesPercentage.toFixed(1)}%{" "}
+                        <span className="text-gray-400 font-normal ml-1">
+                          ({Number(proposal.yesVotes)})
+                        </span>
                       </span>
                     </div>
-                    <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+
+                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-500 rounded-full"
+                        className="h-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)] transition-all duration-700 ease-out rounded-full"
                         style={{ width: `${yesPercentage}%` }}
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
+                  {/* No Bar */}
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-red-400 font-medium flex items-center gap-2">
-                        <ThumbsDown className="w-4 h-4" />
-                        No
+                      <span className="text-gray-700 font-medium flex items-center gap-2">
+                        <ThumbsDown className="w-4 h-4 text-red-500" />
+                        Reject
                       </span>
-                      <span className="text-red-400 font-mono">
-                        {noPercentage.toFixed(0)}% ({proposal.noVotes} votes)
+                      <span className="text-gray-900 font-bold">
+                        {noPercentage.toFixed(1)}%{" "}
+                        <span className="text-gray-400 font-normal ml-1">
+                          ({Number(proposal.noVotes)})
+                        </span>
                       </span>
                     </div>
-                    <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-red-500 to-red-400 transition-all duration-500 rounded-full"
+                        className="h-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)] transition-all duration-700 ease-out rounded-full"
                         style={{ width: `${noPercentage}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Vote Buttons */}
                 {canVote && !proposal.executed && (
-                  <div className="flex gap-3 pt-2">
+                  <div className="pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
                     <Button
-                      onClick={() => handleVote(true)}
-                      disabled={isVoting || hasVoted}
-                      className="flex-1 bg-green-500/20 hover:bg-green-500/30 hover:text-green-300 cursor-pointer text-green-300 border border-green-500/30"
-                      variant="outline"
+                      onClick={() => handleVoteFunc(BigInt(index), true)}
+                      disabled={isLoading || isConfirmed}
+                      className="w-full bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border border-green-200 shadow-sm h-12 font-semibold text-base transition-all"
+                      variant="ghost"
                     >
-                      {isVoting
-                        ? "Submitting..."
-                        : hasVoted
-                        ? "Voted"
-                        : "Vote Yes"}
+                      {isLoading ? "Voting..." : "Vote Yes"}
                     </Button>
                     <Button
-                      onClick={() => handleVote(false)}
-                      disabled={isVoting || hasVoted}
-                      className="flex-1 bg-red-500/20 hover:bg-red-500/30 hover:text-red-300 text-red-300 border border-red-500/30 cursor-pointer"
-                      variant="outline"
+                      onClick={() => handleVoteFunc(BigInt(index), false)}
+                      disabled={isLoading || isConfirmed}
+                      className="w-full bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 border border-red-200 shadow-sm h-12 font-semibold text-base transition-all"
+                      variant="ghost"
                     >
-                      {isVoting
-                        ? "Submitting..."
-                        : hasVoted
-                        ? "Voted"
-                        : "Vote No"}
+                      {isLoading ? "Voting..." : "Vote No"}
                     </Button>
                   </div>
-                )}
-
-                {hasVoted && (
-                  <p className="text-sm text-center text-gray-400 italic">
-                    You have already voted on this proposal
-                  </p>
                 )}
               </div>
             </Card>
           );
         })
       ) : (
-        <div>No proposal available</div>
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="text-gray-400 mb-2">No active proposals</div>
+          <p className="text-sm text-gray-500">
+            Check back later for new governance items.
+          </p>
+        </div>
       )}
-    </>
+    </div>
   );
 }

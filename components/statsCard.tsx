@@ -1,5 +1,7 @@
 import { Card } from "@/components/ui/card";
+import { colorConfig } from "@/constant/dummyDats";
 import type { ReactNode } from "react";
+import React from "react";
 
 interface StatsCardProps {
   title: string;
@@ -10,23 +12,54 @@ interface StatsCardProps {
 }
 
 export function StatsCard({ title, value, icon, color, mono }: StatsCardProps) {
-  const colorClasses = {
-    purple: "purple-500/20",
-    blue: "blue-500/20",
-    green: "green-500/20",
-    pink: "red-500/20",
+  const colors = colorConfig[color];
+
+  // Function to add color to icon if it's an SVG
+  const getColoredIcon = () => {
+    if (React.isValidElement(icon)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return React.cloneElement(icon as React.ReactElement<any>, {
+        style: { color: colors.iconColor, width: "20px", height: "20px" },
+      });
+    }
+    return icon;
   };
 
   return (
-    <Card className="p-6 bg-slate-800 border-slate-700 hover:bg-slate-800/70 transition-all hover:shadow-lg hover:shadow-purple-500/10">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-gray-400">{title}</p>
-        <div className={`p-2 rounded-lg bg-${colorClasses[color]}`}>{icon}</div>
+    <Card
+      className="p-6 transition-all hover:scale-[1.02] duration-200 shadow-xl border-2"
+      style={{
+        backgroundColor: colors.bg,
+        borderColor: colors.border,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = colors.hoverShadow;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = `0 1px 3px 0 ${colors.border}20`;
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p
+          className="text-sm font-inter font-semibold"
+          style={{ color: colors.border }}
+        >
+          {title}
+        </p>
+        <div
+          className="p-2.5 rounded-lg flex items-center justify-center"
+          style={{
+            backgroundColor: colors.iconBg,
+          }}
+        >
+          {getColoredIcon()}
+        </div>
       </div>
       <p
-        className={`text-2xl font-bold text-white ${
-          mono ? "font-mono text-lg" : ""
+        className={`text-2xl font-bold ${
+          mono ? "font-mono text-lg tracking-tight" : ""
         }`}
+        style={{ color: colors.valueColor }}
       >
         {value}
       </p>

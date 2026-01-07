@@ -10,10 +10,18 @@ import { StatsCard } from "@/components/statsCard";
 import { ProposalCard } from "@/components/proposalCard";
 import { CreateProposal } from "@/components/createProposal";
 import { MemberManagement } from "@/components/memberManagement";
-import { CheckCircle2, Users, FileText, Vote } from "lucide-react";
+import {
+  CheckCircle2,
+  Users,
+  FileText,
+  Vote,
+  Box,
+  Loader2,
+} from "lucide-react";
 import ConnectButton from "@/components/connetButton";
 import { useVoteChain } from "@/context";
 import { SampleProposals } from "@/constant/dummyDats";
+import { Logo } from "@/components/logo";
 
 interface Proposal {
   id: number;
@@ -34,69 +42,50 @@ export default function VotingDAOApp() {
     getMembersCount,
     isLoading,
   } = useVoteChain();
-  const [proposals, setProposals] = useState<Proposal[]>(SampleProposals);
-
-  const [userVotesCount, setUserVotesCount] = useState(7);
-
-  const [sortBy, setSortBy] = useState<"newest" | "votes" | "active">("newest");
 
   const ownerAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb";
-  console.log(getAllProposal);
-  const handleVote = (proposalId: number, voteYes: boolean) => {
-    setProposals(
-      proposals.map((p) =>
-        p.id === proposalId
-          ? {
-              ...p,
-              yesVotes: voteYes ? p.yesVotes + 1 : p.yesVotes,
-              noVotes: !voteYes ? p.noVotes + 1 : p.noVotes,
-            }
-          : p
-      )
-    );
-    setUserVotesCount(userVotesCount + 1);
-  };
-
-  const sortedProposals = [...proposals].sort((a, b) => {
-    if (sortBy === "newest") return 0; // Already sorted by creation
-    if (sortBy === "votes")
-      return b.yesVotes + b.noVotes - (a.yesVotes + a.noVotes);
-    if (sortBy === "active")
-      return a.executed === b.executed ? 0 : a.executed ? 1 : -1;
-    return 0;
-  });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-lg">Loading...</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.4] pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+
+        <div className="relative z-10 flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-blue-100 rounded-full blur-xl animate-pulse"></div>
+            <div className="bg-white p-4 rounded-2xl shadow-xl border border-blue-50 relative">
+              <Box className="w-8 h-8 text-blue-600 animate-bounce duration-[3000ms]" />
+            </div>
+          </div>
+
+          <div className="text-center space-y-2">
+            <h3 className="text-slate-900 font-bold text-lg tracking-tight">
+              VoteChain
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-slate-500 font-mono bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+              <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
+              <span>Synchronizing state...</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
   return (
-    <div className="min-h-screen bg-black ">
-      <header className="sticky top-0 z-50  ">
+    <div className="min-h-screen  bg-[#fafafa]">
+      <header className="sticky top-0 z-50  py-4 bg-[#fafafa] shadow-[2px] ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
-          <div className="flex items-center justify-between flex-wrap gap-4 bg-black py-4">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl  font-bold text-white  font-inter tracking-[0%] leading-[1.1]">
-                {" "}
-                VoteSync
-              </h1>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              {walletAddress && (
-                <>
-                  <Badge
-                    variant="outline"
-                    className="bg-purple-500/10 text-purple-300 py-1 border-purple-500/30 px-3 hidden sm:inline-flex"
-                  >
+          <div className="flex items-center  flex-wrap gap-4 py-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap w-full">
+              <Logo />
+              <div className="flex items-center gap-4">
+                {walletAddress && (
+                  <Badge className="bg-blue-50 text-blue-600  hover:bg-blue-100 border-blue-100 gap-1 shadow-none font-medium">
                     {userRole}
                   </Badge>
-                </>
-              )}
-              <ConnectButton />
+                )}
+                <ConnectButton />
+              </div>
             </div>
           </div>
         </div>
@@ -145,37 +134,19 @@ export default function VotingDAOApp() {
             {userRole === "Owner" && <MemberManagement />}
 
             {/* Create Proposal Section */}
-            {(userRole === "Owner" || userRole === "Member") && (
-              <CreateProposal />
-            )}
+
+            <CreateProposal />
 
             {/* Proposals List */}
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
-                <h2 className="text-2xl font-bold text-white">Proposals</h2>
+                <h2 className="text-2xl font-bold text-black font-inter">
+                  Proposals
+                </h2>
               </div>
               <ProposalCard
                 canVote={userRole === "Owner" || userRole === "Member"}
-                onVote={handleVote}
               />
-              {/* <div className="grid gap-4">
-                {sortedProposals.length === 0 ? (
-                  <Card className="p-12 text-center bg-slate-800/50 border-slate-700">
-                    <FileText className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">
-                      No proposals yet. Create the first one!
-                    </p>
-                  </Card>
-                ) : (
-                  sortedProposals.map((proposal) => (
-                    <ProposalCard
-                      key={proposal.id}
-                      canVote={userRole === "Owner" || userRole === "Member"}
-                      onVote={handleVote}
-                    />
-                  ))
-                )}
-              </div> */}
             </div>
           </>
         )}

@@ -16,6 +16,9 @@ export const useWriteToContractHook = () => {
     `0x${string}` | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentToastId, setCurrentToastId] = useState<string | number | null>(
+    null
+  );
 
   // Wait for transaction confirmation
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -36,6 +39,10 @@ export const useWriteToContractHook = () => {
             } on proposal ${proposalId}`,
           });
           refetchData?.();
+          if (currentToastId) {
+            toast.dismiss(currentToastId);
+            setCurrentToastId(null);
+          }
         }
       });
     },
@@ -53,6 +60,10 @@ export const useWriteToContractHook = () => {
         });
       });
       refetchData?.();
+      if (currentToastId) {
+        toast.dismiss(currentToastId);
+        setCurrentToastId(null);
+      }
     },
   });
 
@@ -68,6 +79,10 @@ export const useWriteToContractHook = () => {
         });
       });
       refetchData?.();
+      if (currentToastId) {
+        toast.dismiss(currentToastId);
+        setCurrentToastId(null);
+      }
     },
   });
   // Write functions with event integration
@@ -80,10 +95,15 @@ export const useWriteToContractHook = () => {
 
       setIsLoading(true);
       const toastId = toast.loading("Submitting your vote...");
+      setCurrentToastId(toastId);
 
       try {
         const hash = await vote(proposalId, voteChoice);
         setTransactionHash(hash);
+        toast.success("Vote submitted!", {
+          id: toastId,
+          description: "Waiting for confirmation...",
+        });
         return hash;
       } catch (error) {
         const errorMessage =
@@ -109,6 +129,7 @@ export const useWriteToContractHook = () => {
 
       setIsLoading(true);
       const toastId = toast.loading("Creating proposal...");
+      setCurrentToastId(toastId);
 
       try {
         const hash = await createProposal(description);
@@ -142,6 +163,7 @@ export const useWriteToContractHook = () => {
 
       setIsLoading(true);
       const toastId = toast.loading("Adding member...");
+      setCurrentToastId(toastId);
 
       try {
         const hash = await addMember(memberAddress);
