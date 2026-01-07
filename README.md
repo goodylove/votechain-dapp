@@ -12,7 +12,7 @@
 
 ## 🔗 Smart Contract
 
-The core logic is deployed on the **zkSync Sepolia Testnet explorer**.
+The core logic is deployed on the **zkSync Sepolia Testnet **.
 
 - **Contract Address:** `0x2A1635227640d235D31Cb6Ad7b85F97f24Af4787`
 - **Explorer Link:** [View on zkSync Explorer](https://sepolia.explorer.zksync.io/address/0x2A1635227640d235D31Cb6Ad7b85F97f24Af4787)
