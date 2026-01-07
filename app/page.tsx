@@ -35,36 +35,13 @@ export default function VotingDAOApp() {
     isLoading,
   } = useVoteChain();
   const [proposals, setProposals] = useState<Proposal[]>(SampleProposals);
-  const [members, setMembers] = useState<string[]>([
-    "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
-    "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
-    "0xdD870fA1b7C4700F2BD7f44238821C26f7392148",
-  ]);
-  const [totalMembers, setTotalMembers] = useState(3);
+
   const [userVotesCount, setUserVotesCount] = useState(7);
 
   const [sortBy, setSortBy] = useState<"newest" | "votes" | "active">("newest");
 
   const ownerAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb";
-
-  const disconnectWallet = () => {
-    setWalletAddress("");
-    setUserRole("guest");
-    toast.success("Wallet Disconnected Successfully!");
-  };
-
-  const handleCreateProposal = (description: string) => {
-    const newProposal: Proposal = {
-      id: proposals.length + 1,
-      description,
-      yesVotes: 0,
-      noVotes: 0,
-      executed: false,
-      timestamp: "Just now",
-    };
-    setProposals([newProposal, ...proposals]);
-  };
-
+  console.log(getAllProposal);
   const handleVote = (proposalId: number, voteYes: boolean) => {
     setProposals(
       proposals.map((p) =>
@@ -165,58 +142,23 @@ export default function VotingDAOApp() {
             </div>
 
             {/* Owner Panel */}
-            {userRole === "owner" && <MemberManagement />}
+            {userRole === "Owner" && <MemberManagement />}
 
             {/* Create Proposal Section */}
-            {(userRole === "owner" || userRole === "member") && (
-              <CreateProposal onCreateProposal={handleCreateProposal} />
+            {(userRole === "Owner" || userRole === "Member") && (
+              <CreateProposal />
             )}
 
             {/* Proposals List */}
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <h2 className="text-2xl font-bold text-white">Proposals</h2>
-                {/* <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={sortBy === "newest" ? "default" : "outline"}
-                    onClick={() => setSortBy("newest")}
-                    className={
-                      sortBy === "newest"
-                        ? "bg-purple-500 hover:bg-purple-600"
-                        : "text-gray-300 border-gray-700 hover:bg-slate-800"
-                    }
-                  >
-                    Newest
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={sortBy === "votes" ? "default" : "outline"}
-                    onClick={() => setSortBy("votes")}
-                    className={
-                      sortBy === "votes"
-                        ? "bg-purple-500 hover:bg-purple-600"
-                        : "text-gray-300 border-gray-700 hover:bg-slate-800"
-                    }
-                  >
-                    Most Votes
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={sortBy === "active" ? "default" : "outline"}
-                    onClick={() => setSortBy("active")}
-                    className={
-                      sortBy === "active"
-                        ? "bg-purple-500 hover:bg-purple-600"
-                        : "text-gray-300 border-gray-700 hover:bg-slate-800"
-                    }
-                  >
-                    Active Only
-                  </Button>
-                </div> */}
               </div>
-
-              <div className="grid gap-4">
+              <ProposalCard
+                canVote={userRole === "Owner" || userRole === "Member"}
+                onVote={handleVote}
+              />
+              {/* <div className="grid gap-4">
                 {sortedProposals.length === 0 ? (
                   <Card className="p-12 text-center bg-slate-800/50 border-slate-700">
                     <FileText className="w-12 h-12 text-gray-500 mx-auto mb-4" />
@@ -228,13 +170,12 @@ export default function VotingDAOApp() {
                   sortedProposals.map((proposal) => (
                     <ProposalCard
                       key={proposal.id}
-                      proposal={proposal}
-                      canVote={userRole === "owner" || userRole === "member"}
+                      canVote={userRole === "Owner" || userRole === "Member"}
                       onVote={handleVote}
                     />
                   ))
                 )}
-              </div>
+              </div> */}
             </div>
           </>
         )}

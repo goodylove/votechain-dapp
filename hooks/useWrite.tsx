@@ -1,15 +1,17 @@
 import { useState, useCallback, useEffect } from "react";
-import { useConnection } from "wagmi";
+import { BaseError, useConnection } from "wagmi";
 import { addMember, createProposal, vote } from "@/lib/writeContract";
 import { useWaitForTransactionReceipt, useWatchContractEvent } from "wagmi";
 
 import { toast } from "sonner";
 import { VOTING_V1_ABI } from "@/constant/abi";
+import { useVoteChain } from "@/context";
 const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
   "") as `0x${string}`;
 
 export const useWriteToContractHook = () => {
   const { address } = useConnection();
+  const { refetchData } = useVoteChain();
   const [transactionHash, setTransactionHash] = useState<
     `0x${string}` | undefined
   >(undefined);
@@ -33,6 +35,7 @@ export const useWriteToContractHook = () => {
               support ? "YES" : "NO"
             } on proposal ${proposalId}`,
           });
+          refetchData?.();
         }
       });
     },
@@ -49,6 +52,7 @@ export const useWriteToContractHook = () => {
           description: `ID: ${proposalId} - ${description}`,
         });
       });
+      refetchData?.();
     },
   });
 
@@ -63,6 +67,7 @@ export const useWriteToContractHook = () => {
           description: `Address: ${member}`,
         });
       });
+      refetchData?.();
     },
   });
   // Write functions with event integration
@@ -148,7 +153,7 @@ export const useWriteToContractHook = () => {
         return hash;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+          error instanceof BaseError ? error.shortMessage : "Unknown error";
         toast.error("Add member failed!", {
           id: toastId,
           description: errorMessage,

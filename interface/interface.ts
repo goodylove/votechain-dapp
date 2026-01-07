@@ -5,7 +5,7 @@ export interface VoteChainContextType {
     chainId?: number;
     connectWallet: () => void;
     setMemberAddresses: (addresses: string[]) => void;
-    userRole: "guest" | "owner" | "member";
+    userRole: "Guest" | "Owner" | "Member";
     getAllProposal: {
         proposals: {
             description: string;
@@ -26,6 +26,7 @@ export interface VoteChainContextType {
     };
     getMembersCount: number;
     isLoading: boolean;
+    refetchData: () => void
 }
 
 export interface Proposal {

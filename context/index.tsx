@@ -17,10 +17,9 @@ const VoteChainProvider = ({ children }: { children: React.ReactNode }) => {
   const { open: connectWallet } = useAppKit();
   const [memberAddresses, setMemberAddresses] = useState<string[]>([]);
 
-  const { data, isLoading } = useReadContracts({
+  const { data, isLoading, refetch } = useReadContracts({
     contracts: ReadContractData(memberAddresses),
   });
-
 
   const userRole = useMemo((): "Guest" | "Owner" | "Member" => {
     if (!data || !address) return "Guest";
@@ -28,7 +27,7 @@ const VoteChainProvider = ({ children }: { children: React.ReactNode }) => {
     const owner = data[0].result as `0x${string}`;
     const isMember = data[1]?.result;
 
-    if (address.toLowerCase() === owner.toLowerCase()) {
+    if (address?.toLowerCase() === owner?.toLowerCase()) {
       return "Owner";
     }
 
@@ -112,6 +111,7 @@ const VoteChainProvider = ({ children }: { children: React.ReactNode }) => {
       getAllProposal,
       getMembersCount,
       isLoading,
+      refetchData: refetch,
     };
   }, [
     isLoading,
@@ -124,6 +124,7 @@ const VoteChainProvider = ({ children }: { children: React.ReactNode }) => {
     userRole,
     getAllProposal,
     getMembersCount,
+    refetch,
   ]);
 
   return (

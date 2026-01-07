@@ -7,15 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { FileText, Sparkles } from "lucide-react";
 import Confetti from "react-confetti";
+import { useWriteToContractHook } from "@/hooks/useWrite";
 
-interface CreateProposalProps {
-  onCreateProposal: (description: string) => void;
-}
-
-export function CreateProposal({ onCreateProposal }: CreateProposalProps) {
+export function CreateProposal() {
   const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [showConfetti, setShowConfetti] = useState(false);
+  const { handleCreateProposal, isLoading, isConfirmed } =
+    useWriteToContractHook();
 
   const maxChars = 500;
 
@@ -29,17 +28,11 @@ export function CreateProposal({ onCreateProposal }: CreateProposalProps) {
       toast.error(`Proposal description cannot exceed ${maxChars} characters`);
       return;
     }
-
-    setIsSubmitting(true);
-    // Simulate transaction
-    setTimeout(() => {
-      onCreateProposal(description);
+    await handleCreateProposal(description);
+    setShowConfetti(true);
+    if (isConfirmed) {
       setDescription("");
-      setIsSubmitting(false);
-      setShowConfetti(true);
-      toast.success("Proposal created successfully!");
-      setTimeout(() => setShowConfetti(false), 5000);
-    }, 1500);
+    }
   };
 
   return (
@@ -69,7 +62,7 @@ export function CreateProposal({ onCreateProposal }: CreateProposalProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-32 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500 resize-none"
-              disabled={isSubmitting}
+              disabled={isLoading}
               maxLength={maxChars}
             />
             <div className="flex items-center justify-between text-xs text-gray-400">
@@ -86,11 +79,11 @@ export function CreateProposal({ onCreateProposal }: CreateProposalProps) {
 
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isLoading}
             className="w-full bg-blue-500 text-white font-medium py-4 px-6 rounded-xl hover:bg-blue-600 transition cursor-pointer"
             size="lg"
           >
-            {isSubmitting ? "Submitting..." : "Submit Proposal"}
+            {isLoading ? "Submitting..." : "Submit Proposal"}
           </Button>
         </div>
       </Card>

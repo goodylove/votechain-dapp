@@ -12,8 +12,7 @@ import { useWriteToContractHook } from "@/hooks/useWrite";
 
 export function MemberManagement() {
   const [newMemberAddress, setNewMemberAddress] = useState<`0x${string}`>();
-  const [isAdding, setIsAdding] = useState(false);
-  const { isConnecting } = useVoteChain();
+
   const { handleAddMember, isLoading } = useWriteToContractHook();
 
   const handleAddMemberFunc = async () => {
@@ -58,15 +57,15 @@ export function MemberManagement() {
                 setNewMemberAddress(e.target.value as `0x${string}`)
               }
               className="flex-1 bg-slate-900/50 border-slate-700 text-white placeholder:text-gray-500 font-mono"
-              disabled={isAdding}
+              disabled={isLoading}
             />
             <Button
               onClick={handleAddMemberFunc}
-              disabled={isAdding}
+              disabled={isLoading}
               className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white cursor-pointer flex items-center"
             >
               <UserPlus className="w-4 h-4 mr-2" />
-              {isAdding ? "Adding..." : "Add Member"}
+              {isLoading ? "Adding..." : "Add Member"}
             </Button>
           </div>
           <p className="text-xs text-gray-400">
